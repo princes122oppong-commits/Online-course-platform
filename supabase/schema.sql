@@ -24,9 +24,9 @@ begin
   insert into public.profiles (user_id, full_name, email, role, is_verified)
   values (
     new.id,
-    coalesce(new.raw_user_metadata ->> 'full_name', split_part(new.email, '@', 1)),
+    coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),
     new.email,
-    coalesce(new.raw_user_metadata ->> 'role', 'student'),
+    coalesce(new.raw_user_meta_data ->> 'role', 'student'),
     false
   )
   on conflict (user_id) do update
