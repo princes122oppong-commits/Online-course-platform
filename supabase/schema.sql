@@ -45,14 +45,17 @@ for each row execute procedure public.handle_new_user();
 
 alter table public.profiles enable row level security;
 
+drop policy if exists "Users can view their own profile" on public.profiles;
 create policy "Users can view their own profile"
 on public.profiles for select
 using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert their own profile" on public.profiles;
 create policy "Users can insert their own profile"
 on public.profiles for insert
 with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
 on public.profiles for update
 using (auth.uid() = user_id)
@@ -288,26 +291,32 @@ alter table public.orders enable row level security;
 alter table public.certificates enable row level security;
 alter table public.notifications enable row level security;
 
+drop policy if exists "Public can read published courses" on public.courses;
 create policy "Public can read published courses"
 on public.courses for select
 using (is_published = true or auth.uid() is not null);
 
+drop policy if exists "Public can read categories" on public.categories;
 create policy "Public can read categories"
 on public.categories for select
 using (true);
 
+drop policy if exists "Users can view their own enrollments" on public.enrollments;
 create policy "Users can view their own enrollments"
 on public.enrollments for select
 using (auth.uid() = student_id or auth.uid() is not null);
 
+drop policy if exists "Users can view their own notifications" on public.notifications;
 create policy "Users can view their own notifications"
 on public.notifications for select
 using (auth.uid() = user_id);
 
+drop policy if exists "Course owners can manage their courses" on public.courses;
 create policy "Course owners can manage their courses"
 on public.courses for insert
 with check (auth.uid() is not null and tutor_id is not null);
 
+drop policy if exists "Course owners can update their courses" on public.courses;
 create policy "Course owners can update their courses"
 on public.courses for update
 using (auth.uid() is not null and tutor_id is not null);
