@@ -1,6 +1,6 @@
 window.__COURSEHUB_SUPABASE__ = {
   url: 'https://xgkkjkjwymokobobopqq.supabase.co',
-  anonKey: 'sb_publishable_TuK4d8LQQN2FoOv_9m3xg_oyNbyBZu'
+  anonKey: 'sb_publishable__TuK4d8LQQN2FoOv_9m3xg_oyNbyBZu'
 };
 
 window.SUPABASE_URL = window.__COURSEHUB_SUPABASE__.url;
