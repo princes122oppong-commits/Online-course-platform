@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learn. Teach. Grow.</title>
+    <link rel="stylesheet" href="css/base.css?v=2" />
+    <link rel="stylesheet" href="css/index.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container navbar">
+        <a class="brand" href="index.html">CourseHub</a>
+        <nav class="nav-links">
+          <a href="index.html" data-nav>Home</a>
+          <a href="courses.html" data-nav>Courses</a>
+          <a href="categories.html" data-nav>Categories</a>
+          <a href="tutors.html" data-nav>Tutors</a>
+          <a href="pricing.html" data-nav>Pricing</a>
+          <a href="about.html" data-nav>About</a>
+          <a href="contact.html" data-nav>Contact</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-outline" href="login.html">Login</a>
+          <a class="btn btn-primary" href="register.html">Get Started</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <p style="color: var(--primary); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">Learn. Teach. Grow.</p>
+            <h1>Build skills that change your future.</h1>
+            <p>Join a professional learning platform designed for students, tutors, and platform administrators. Learn from industry experts, teach with confidence, and grow together.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="courses.html">Browse Courses</a>
+              <a class="btn btn-secondary" href="register.html">Become a Tutor</a>
+            </div>
+
+            <div class="search-panel">
+              <input type="text" placeholder="Search courses, skills, or tutors" />
+              <select>
+                <option>All categories</option>
+                <option>Web Development</option>
+                <option>Design</option>
+                <option>Marketing</option>
+                <option>Business</option>
+              </select>
+              <button class="btn btn-primary" type="button">Search</button>
+            </div>
+          </div>
+
+          <div class="hero-card">
+            <h3>Platform Snapshot</h3>
+            <div class="stat-grid" style="margin-top: 18px;">
+              <div class="stat-box">
+                <strong data-count="2540">2540</strong>
+                <div>Students</div>
+              </div>
+              <div class="stat-box">
+                <strong data-count="183">183</strong>
+                <div>Tutors</div>
+              </div>
+              <div class="stat-box">
+                <strong data-count="426">426</strong>
+                <div>Courses</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2 class="section-title">Featured courses</h2>
+          <p class="section-subtitle">Explore the courses students are learning right now.</p>
+
+          <div id="featuredCourses" class="card-grid"></div>
+        </div>
+      </section>
+
+      <section class="section" style="background: #fff;">
+        <div class="container">
+          <h2 class="section-title">Popular categories</h2>
+          <div id="popularCategories" class="category-grid card-grid"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2 class="section-title">How it works</h2>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <h3>1. Choose</h3>
+              <p>Browse courses by skill, category, or tutor.</p>
+            </div>
+            <div class="feature-card">
+              <h3>2. Learn</h3>
+              <p>Study videos, downloadable guides, and practice quizzes.</p>
+            </div>
+            <div class="feature-card">
+              <h3>3. Track</h3>
+              <p>Monitor progress with clear learning milestones.</p>
+            </div>
+            <div class="feature-card">
+              <h3>4. Earn</h3>
+              <p>Publish courses and receive payouts from sales or subscriptions.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" style="background: #fff;">
+        <div class="container">
+          <h2 class="section-title">Top tutors</h2>
+          <div id="topTutors" class="tutor-grid card-grid"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2 class="section-title">Student testimonials</h2>
+          <div class="card-grid">
+            <div class="panel-body panel">
+              <p>“The lessons are clear, practical, and the course content is extremely useful for my career.”</p>
+              <strong>— Ama K.</strong>
+            </div>
+            <div class="panel-body panel">
+              <p>“I learned design fundamentals and built my portfolio with confidence.”</p>
+              <strong>— Michael A.</strong>
+            </div>
+            <div class="panel-body panel">
+              <p>“The platform feels professional and easy to use from day one.”</p>
+              <strong>— Sarah N.</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" style="background: #eff6ff;">
+        <div class="container">
+          <h2 class="section-title">Pricing and subscriptions</h2>
+          <div class="card-grid">
+            <div class="panel-body panel">
+              <h3>Basic</h3>
+              <div class="price">GH₵50<span style="font-size: 0.9rem; color: var(--muted);">/month</span></div>
+              <p>Access to selected beginner courses.</p>
+            </div>
+            <div class="panel-body panel" style="border-color: var(--primary);">
+              <h3>Premium</h3>
+              <div class="price">GH₵100<span style="font-size: 0.9rem; color: var(--muted);">/month</span></div>
+              <p>Full course library and premium learning materials.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-grid">
+        <div>
+          <h3>CourseHub</h3>
+          <p>Learn. Teach. Grow.</p>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <p><a href="courses.html">Courses</a></p>
+          <p><a href="categories.html">Categories</a></p>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <p><a href="about.html">About</a></p>
+          <p><a href="contact.html">Contact</a></p>
+        </div>
+        <div>
+          <h4>Business</h4>
+          <p><a href="pricing.html">Pricing</a></p>
+          <p><a href="tutors.html">Tutors</a></p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/mock-data.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,83 @@
+.page-hero {
+  background: #eff6ff;
+  padding: 60px 0;
+}
+
+.page-hero h1 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.page-hero p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 700px;
+}
+
+.content-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 28px;
+}
+
+.sidebar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  height: fit-content;
+}
+
+.sidebar nav a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.sidebar nav a.active,
+.sidebar nav a:hover {
+  background: #e0e7ff;
+  color: var(--primary-dark);
+}
+
+.tutor-card .thumb,
+.course-card .thumb {
+  height: 180px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+}
+
+.tutor-card .body,
+.category-card,
+.panel-body {
+  padding: 18px;
+}
+
+.category-card,
+.panel,
+.tutor-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+
+.card-grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .main-layout,
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
