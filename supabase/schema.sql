@@ -14,6 +14,9 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+create unique index if not exists idx_profiles_user_id_unique
+on public.profiles(user_id);
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
