@@ -71,7 +71,11 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),
     new.email,
-    'student',
+    case
+      when new.raw_user_meta_data ->> 'account_type' in ('student', 'tutor')
+        then new.raw_user_meta_data ->> 'account_type'
+      else 'student'
+    end,
     false
   )
   on conflict (user_id) do update

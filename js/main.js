@@ -543,12 +543,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const fullName = document.querySelector('#registerForm #fullname')?.value.trim();
       const email = document.querySelector('#registerForm #email')?.value.trim();
+      const accountType = document.querySelector('#registerForm #accountType')?.value;
       const password = document.querySelector('#registerForm #password')?.value;
       const confirmPassword = document.querySelector('#registerForm #confirmPassword')?.value;
       const messageEl = document.querySelector('#registerForm #authMessage');
 
-      if (!fullName || !email || !password || !confirmPassword) {
-        setAuthMessage(messageEl, 'Please fill in your name, email, password, and confirmation.', true);
+      if (!fullName || !email || !accountType || !password || !confirmPassword) {
+        setAuthMessage(messageEl, 'Please fill in your name, email, account type, password, and confirmation.', true);
+        return;
+      }
+
+      if (!['student', 'tutor'].includes(accountType)) {
+        setAuthMessage(messageEl, 'Please select either Student or Tutor.', true);
         return;
       }
 
@@ -568,7 +574,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         password,
         options: {
           data: {
-            full_name: fullName
+            full_name: fullName,
+            account_type: accountType
           }
         }
       });
@@ -593,7 +600,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       if (data.session) {
-        window.location.href = getDashboardUrlForRole('student');
+        const { data: savedProfile } = await client
+          .from('profiles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+        window.location.href = getDashboardUrlForRole(savedProfile?.role || accountType);
         return;
       }
 
