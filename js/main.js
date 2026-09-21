@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     return targetMap[normalizedRole] || 'student/dashboard.html';
   };
 
+  const getDashboardUrlForRole = (role) => {
+    const target = getDashboardPathForRole(role);
+    return window.location.pathname.toLowerCase().includes('/admin/') ? `../${target}` : target;
+  };
+
   const setAuthMessage = (messageEl, text, isError = false) => {
     if (!messageEl) return;
     messageEl.textContent = text;
@@ -51,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .maybeSingle();
 
       if (profileError || !profile) return;
-      const target = getDashboardPathForRole(profile.role);
+      const target = getDashboardUrlForRole(profile.role);
       if (window.location.pathname.split('/').pop() !== target.split('/').pop()) {
         window.location.href = target;
       }
@@ -96,19 +101,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  const fallbackData = window.courseHubData || {
+  const fallbackData = {
     courses: [],
     tutors: [],
     dashboards: {
-      student: { stats: [], activity: [] },
-      tutor: { stats: [], activity: [] },
-      admin: { stats: [], activity: [] }
+      student: { stats: [], quickStats: [], courses: [], activity: [] },
+      tutor: { stats: [], quickStats: [], courses: [], activity: [] },
+      admin: { stats: [], quickStats: [], courses: [], activity: [] }
     }
   };
 
   const resolveCourses = async () => {
     const client = getSupabaseClient();
-    if (!client || !isSupabaseReady()) return fallbackData.courses;
+    if (!client || !isSupabaseReady()) return [];
 
     try {
       const { data, error } = await client
@@ -131,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         description: course.description || course.short_description || ''
       }));
     } catch (error) {
-      return fallbackData.courses;
+      return [];
     }
   };
 
@@ -178,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('topTutors');
     if (!container) return;
 
-    const items = tutors && tutors.length ? tutors : fallbackData.tutors;
+    const items = tutors || [];
     container.innerHTML = items.map(tutor => `
       <div class="tutor-card">
         <div class="thumb"></div>
@@ -194,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('coursesGrid');
     if (!container) return;
 
-    const items = courses && courses.length ? courses : fallbackData.courses;
+    const items = courses || [];
     container.innerHTML = items.map(course => `
       <article class="course-card" data-title="${course.title}" data-category="${String(course.category || '').toLowerCase()}">
         <div class="thumb"></div>
@@ -235,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const detailRoot = document.getElementById('courseDetail');
     if (!detailRoot) return;
 
-    const items = courses && courses.length ? courses : fallbackData.courses;
+    const items = courses || [];
     const params = new URLSearchParams(window.location.search);
     const courseId = params.get('id');
     const course = items.find(item => String(item.id) === String(courseId));
@@ -314,15 +319,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             { label: 'Streak', value: '0 days' }
           ],
           courses: [
-            { title: 'Complete Web Development', progress: Math.min(98, completionRate + 10), status: 'In progress' },
-            { title: 'UI/UX Design Basics', progress: Math.max(35, completionRate - 10), status: 'Continue' },
-            { title: 'Digital Marketing Masterclass', progress: Math.min(96, completionRate + 9), status: 'Almost done' }
+            
           ],
-          activity: [
-            'Completed CSS Fundamentals lesson',
-            'Passed Quiz 1 in Web Development',
-            'Downloaded UI/UX notes PDF'
-          ]
+          activity: []
         };
       }
 
@@ -334,31 +333,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]);
 
         const courseCount = courses.length || 0;
-        const studentCount = courseRows.length || 184;
-        const revenueValue = courseCount > 0 ? `GH₵${(courseCount * 980).toLocaleString()}` : 'GH₵8,420';
+        const studentCount = courseRows.length;
+        const revenueValue = `GH₵${(courseCount * 0).toLocaleString()}`;
 
         return {
           stats: [
-            { label: 'Courses', value: courseCount || 7 },
+            { label: 'Courses', value: courseCount },
             { label: 'Enrolled students', value: studentCount },
             { label: 'Earnings', value: revenueValue }
           ],
-          summary: 'Your courses are attracting steady engagement.',
+          summary: 'Your tutor data is shown from the database.',
           quickStats: [
-            { label: 'Course rating', value: '4.8/5' },
+            { label: 'Course rating', value: 'Not available' },
             { label: 'Students', value: String(studentCount) },
             { label: 'Earnings', value: revenueValue }
           ],
-          courses: [
-            { title: 'Complete Web Development', progress: 86, status: 'Published' },
-            { title: 'UI Design Crash Course', progress: 64, status: 'Draft' },
-            { title: 'Digital Growth Strategies', progress: 52, status: 'Pending review' }
-          ],
-          activity: [
-            'Course review approved for UI Design Crash Course',
-            'New student enrolled in Complete Web Development',
-            'Withdrawal request pending approval'
-          ]
+          courses: [],
+          activity: []
         };
       }
 
@@ -375,26 +366,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         return {
           stats: [
-            { label: 'Students', value: (studentProfiles.length || 2540).toLocaleString() },
-            { label: 'Tutors', value: tutorProfiles.length || 183 },
-            { label: 'Revenue', value: `GH₵${paidRevenue ? paidRevenue.toLocaleString() : '85,420'}` }
+            { label: 'Students', value: studentProfiles.length.toLocaleString() },
+            { label: 'Tutors', value: tutorProfiles.length },
+            { label: 'Revenue', value: `GH₵${paidRevenue.toLocaleString()}` }
           ],
-          summary: 'Platform health is steady and growth is trending upward.',
+          summary: 'Platform metrics are shown from the database.',
           quickStats: [
-            { label: 'New enrollments', value: '314' },
-            { label: 'Pending approvals', value: '12' },
-            { label: 'Revenue', value: `GH₵${paidRevenue ? paidRevenue.toLocaleString() : '85,420'}` }
+            { label: 'New enrollments', value: 'Not available' },
+            { label: 'Pending approvals', value: 'Not available' },
+            { label: 'Revenue', value: `GH₵${paidRevenue.toLocaleString()}` }
           ],
-          courses: [
-            { title: 'Course approval queue', progress: 41, status: 'Needs review' },
-            { title: 'Tutor performance', progress: 73, status: 'Healthy' },
-            { title: 'Refund review', progress: 28, status: 'Under audit' }
-          ],
-          activity: [
-            '12 courses pending approval',
-            '8 withdrawal requests awaiting review',
-            'Platform commission updated to 15%'
-          ]
+          courses: [],
+          activity: []
         };
       }
 
@@ -501,8 +484,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const client = getSupabaseClient();
       if (!client || !isSupabaseReady()) {
-        setAuthMessage(messageEl, 'Supabase is not configured yet. Demo mode is active.', false);
-        setTimeout(() => window.location.href = 'student/dashboard.html', 600);
+        setAuthMessage(messageEl, 'The authentication service is unavailable. Please configure Supabase before signing in.', true);
         return;
       }
 
@@ -519,7 +501,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .maybeSingle();
 
       const pageRole = window.location.pathname.toLowerCase().includes('/admin/') ? 'admin' : 'student';
-      const target = getDashboardPathForRole(profile?.role || 'student');
+      const target = getDashboardUrlForRole(profile?.role || 'student');
 
       if (pageRole === 'admin' && profile?.role !== 'admin') {
         setAuthMessage(messageEl, 'This admin portal is restricted to admin accounts only.', true);
@@ -544,17 +526,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       const fullName = document.querySelector('#registerForm #fullname')?.value.trim();
       const email = document.querySelector('#registerForm #email')?.value.trim();
       const password = document.querySelector('#registerForm #password')?.value;
+      const confirmPassword = document.querySelector('#registerForm #confirmPassword')?.value;
       const messageEl = document.querySelector('#registerForm #authMessage');
 
-      if (!fullName || !email || !password) {
-        setAuthMessage(messageEl, 'Please fill in your name, email, and password.', true);
+      if (!fullName || !email || !password || !confirmPassword) {
+        setAuthMessage(messageEl, 'Please fill in your name, email, password, and confirmation.', true);
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setAuthMessage(messageEl, 'Passwords do not match. Please re-enter them.', true);
         return;
       }
 
       const client = getSupabaseClient();
       if (!client || !isSupabaseReady()) {
-        setAuthMessage(messageEl, 'Supabase is not configured yet. Demo registration redirect is active.', false);
-        setTimeout(() => window.location.href = getDashboardPathForRole('student'), 600);
+        setAuthMessage(messageEl, 'The authentication service is unavailable. Please configure Supabase before creating an account.', true);
         return;
       }
 
@@ -588,7 +575,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       if (data.session) {
-        window.location.href = getDashboardPathForRole('student');
+        window.location.href = getDashboardUrlForRole('student');
         return;
       }
 

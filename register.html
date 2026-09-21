@@ -41,7 +41,14 @@
             <div class="auth-field password-field">
               <label for="password">Password</label>
               <span class="field-icon">◍</span>
-              <input class="auth-input" id="password" type="password" placeholder="Create a strong password" />
+              <input class="auth-input" id="password" type="password" placeholder="Create a strong password" autocomplete="new-password" />
+              <button class="password-toggle" type="button" aria-label="Show password" title="Show password">👁</button>
+            </div>
+
+            <div class="auth-field password-field">
+              <label for="confirmPassword">Confirm password</label>
+              <span class="field-icon">◍</span>
+              <input class="auth-input" id="confirmPassword" type="password" placeholder="Re-enter your password" autocomplete="new-password" />
               <button class="password-toggle" type="button" aria-label="Show password" title="Show password">👁</button>
             </div>
 
