@@ -33,31 +33,23 @@
             </div>
 
             <div class="auth-field">
-              <label for="role">Role</label>
-              <span class="field-icon">◍</span>
-              <select class="auth-input" id="role">
-                <option value="student">Student</option>
-                <option value="tutor">Tutor</option>
-              </select>
-            </div>
-
-            <div class="auth-field">
               <label for="email">Email</label>
               <span class="field-icon">◌</span>
               <input class="auth-input" id="email" type="email" placeholder="you@example.com" />
             </div>
 
-            <div class="auth-field">
+            <div class="auth-field password-field">
               <label for="password">Password</label>
               <span class="field-icon">◍</span>
               <input class="auth-input" id="password" type="password" placeholder="Create a strong password" />
+              <button class="password-toggle" type="button" aria-label="Show password" title="Show password">👁</button>
             </div>
 
             <button class="auth-btn" type="submit">Create account</button>
           </form>
 
           <p class="auth-meta">Already have an account? <a href="login.html">Login</a></p>
-          <p class="auth-meta"><a href="admin/login.html">Admin access</a></p>
+          <p class="auth-meta"><a href="admin/login.html">Admin portal</a></p>
         </div>
       </div>
     </div>
@@ -66,5 +58,19 @@
     <script src="config.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/main.js"></script>
+    <script>
+      document.querySelectorAll('.password-toggle').forEach((button) => {
+        button.addEventListener('click', () => {
+          const input = button.closest('.password-field')?.querySelector('.auth-input');
+          if (!input) return;
+
+          const isPassword = input.type === 'password';
+          input.type = isPassword ? 'text' : 'password';
+          button.textContent = isPassword ? '🙈' : '👁';
+          button.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+          button.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
+        });
+      });
+    </script>
   </body>
 </html>

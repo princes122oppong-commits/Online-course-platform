@@ -201,6 +201,37 @@ body {
   position: relative;
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 46px;
+  border: none;
+  background: transparent;
+  color: rgba(121, 232, 213, 0.95);
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.password-toggle:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.password-toggle:focus {
+  outline: none;
+  opacity: 1;
+}
+
 .auth-field label {
   display: block;
   margin-bottom: 7px;
@@ -217,7 +248,7 @@ body {
   border-radius: 12px;
   background: rgba(15, 30, 34, 0.58);
   color: #effcfb;
-  padding: 0.88rem 1rem 0.88rem 2.7rem;
+  padding: 0.88rem 3rem 0.88rem 2.7rem;
   outline: none;
   box-shadow: inset 0 0 0 1px rgba(90, 225, 210, 0.15), 0 0 12px rgba(89, 229, 198, 0.08);
 }

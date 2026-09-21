@@ -17,6 +17,48 @@ create table if not exists public.profiles (
 create unique index if not exists idx_profiles_user_id_unique
 on public.profiles(user_id);
 
+create or replace function public.current_profile_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select id from public.profiles where user_id = auth.uid()
+$$;
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where user_id = auth.uid() and role = 'admin'
+  )
+$$;
+
+create or replace function public.protect_profile_role()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.role is distinct from old.role and not public.is_admin() then
+    new.role := old.role;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_role on public.profiles;
+create trigger protect_profile_role
+before update on public.profiles
+for each row execute function public.protect_profile_role();
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -29,13 +71,13 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),
     new.email,
-    coalesce(new.raw_user_meta_data ->> 'role', 'student'),
+    'student',
     false
   )
   on conflict (user_id) do update
     set full_name = excluded.full_name,
         email = excluded.email,
-        role = coalesce(excluded.role, public.profiles.role),
+        role = public.profiles.role,
         updated_at = now();
 
   return new;
@@ -51,7 +93,7 @@ alter table public.profiles enable row level security;
 drop policy if exists "Users can view their own profile" on public.profiles;
 create policy "Users can view their own profile"
 on public.profiles for select
-using (auth.uid() = user_id);
+using (auth.uid() = user_id or public.is_admin());
 
 drop policy if exists "Users can insert their own profile" on public.profiles;
 create policy "Users can insert their own profile"
@@ -61,8 +103,14 @@ with check (auth.uid() = user_id);
 drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
 on public.profiles for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using (auth.uid() = user_id or public.is_admin())
+with check (auth.uid() = user_id or public.is_admin());
+
+drop policy if exists "Admins can manage profiles" on public.profiles;
+create policy "Admins can manage profiles"
+on public.profiles for all
+using (public.is_admin())
+with check (public.is_admin());
 
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
@@ -289,15 +337,30 @@ alter table public.categories enable row level security;
 alter table public.courses enable row level security;
 alter table public.course_modules enable row level security;
 alter table public.course_lessons enable row level security;
+alter table public.course_materials enable row level security;
+alter table public.quizzes enable row level security;
+alter table public.quiz_questions enable row level security;
 alter table public.enrollments enable row level security;
+alter table public.course_progress enable row level security;
 alter table public.orders enable row level security;
+alter table public.payments enable row level security;
+alter table public.subscriptions enable row level security;
+alter table public.tutor_earnings enable row level security;
+alter table public.withdrawals enable row level security;
+alter table public.reviews enable row level security;
 alter table public.certificates enable row level security;
 alter table public.notifications enable row level security;
+alter table public.platform_settings enable row level security;
+alter table public.audit_logs enable row level security;
 
 drop policy if exists "Public can read published courses" on public.courses;
 create policy "Public can read published courses"
 on public.courses for select
-using (is_published = true or auth.uid() is not null);
+using (
+  (is_published = true and approval_status = 'approved')
+  or tutor_id = public.current_profile_id()
+  or public.is_admin()
+);
 
 drop policy if exists "Public can read categories" on public.categories;
 create policy "Public can read categories"
@@ -307,22 +370,34 @@ using (true);
 drop policy if exists "Users can view their own enrollments" on public.enrollments;
 create policy "Users can view their own enrollments"
 on public.enrollments for select
-using (auth.uid() = student_id or auth.uid() is not null);
+using (student_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Users can create their own enrollments" on public.enrollments;
+create policy "Users can create their own enrollments"
+on public.enrollments for insert
+with check (student_id = public.current_profile_id());
+
+drop policy if exists "Users can update their own enrollments" on public.enrollments;
+create policy "Users can update their own enrollments"
+on public.enrollments for update
+using (student_id = public.current_profile_id() or public.is_admin())
+with check (student_id = public.current_profile_id() or public.is_admin());
 
 drop policy if exists "Users can view their own notifications" on public.notifications;
 create policy "Users can view their own notifications"
 on public.notifications for select
-using (auth.uid() = user_id);
+using (user_id = public.current_profile_id() or public.is_admin());
 
 drop policy if exists "Course owners can manage their courses" on public.courses;
 create policy "Course owners can manage their courses"
 on public.courses for insert
-with check (auth.uid() is not null and tutor_id is not null);
+with check (tutor_id = public.current_profile_id());
 
 drop policy if exists "Course owners can update their courses" on public.courses;
 create policy "Course owners can update their courses"
 on public.courses for update
-using (auth.uid() is not null and tutor_id is not null);
+using (tutor_id = public.current_profile_id() or public.is_admin())
+with check (tutor_id = public.current_profile_id() or public.is_admin());
 
 create index if not exists idx_courses_tutor on public.courses(tutor_id);
 create index if not exists idx_courses_category on public.courses(category_id);
@@ -331,3 +406,150 @@ create index if not exists idx_courses_rating on public.courses(rating);
 create index if not exists idx_enrollments_student on public.enrollments(student_id);
 create index if not exists idx_orders_student on public.orders(student_id);
 create index if not exists idx_notifications_user on public.notifications(user_id);
+
+-- Reapply policies with profile IDs and explicit ownership checks.
+drop policy if exists "Public can read published courses" on public.courses;
+create policy "Public can read published courses"
+on public.courses for select
+using (
+  (is_published = true and approval_status = 'approved')
+  or tutor_id = public.current_profile_id()
+  or public.is_admin()
+);
+
+drop policy if exists "Users can view their own enrollments" on public.enrollments;
+create policy "Users can view their own enrollments"
+on public.enrollments for select
+using (student_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Students can create enrollments" on public.enrollments;
+create policy "Students can create enrollments"
+on public.enrollments for insert
+with check (student_id = public.current_profile_id());
+
+drop policy if exists "Users can view their own notifications" on public.notifications;
+create policy "Users can view their own notifications"
+on public.notifications for select
+using (user_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Course owners can manage their courses" on public.courses;
+create policy "Course owners can manage their courses"
+on public.courses for insert
+with check (tutor_id = public.current_profile_id());
+
+drop policy if exists "Course owners can update their courses" on public.courses;
+create policy "Course owners can update their courses"
+on public.courses for update
+using (tutor_id = public.current_profile_id() or public.is_admin())
+with check (tutor_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Admins can manage courses" on public.courses;
+create policy "Admins can manage courses"
+on public.courses for all
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Public can read published modules" on public.course_modules;
+create policy "Public can read published modules"
+on public.course_modules for select
+using (exists (
+  select 1 from public.courses c
+  where c.id = course_id and c.is_published and c.approval_status = 'approved'
+));
+
+drop policy if exists "Public can read published lessons" on public.course_lessons;
+create policy "Public can read published lessons"
+on public.course_lessons for select
+using (exists (
+  select 1 from public.course_modules m
+  join public.courses c on c.id = m.course_id
+  where m.id = module_id and c.is_published and c.approval_status = 'approved'
+));
+
+drop policy if exists "Public can read published materials" on public.course_materials;
+create policy "Public can read published materials"
+on public.course_materials for select
+using (exists (
+  select 1 from public.course_lessons l
+  join public.course_modules m on m.id = l.module_id
+  join public.courses c on c.id = m.course_id
+  where l.id = lesson_id and c.is_published and c.approval_status = 'approved'
+));
+
+drop policy if exists "Public can read published quizzes" on public.quizzes;
+create policy "Public can read published quizzes"
+on public.quizzes for select
+using (exists (
+  select 1 from public.courses c
+  where c.id = course_id and c.is_published and c.approval_status = 'approved'
+));
+
+drop policy if exists "Admins can manage quiz questions" on public.quiz_questions;
+create policy "Admins can manage quiz questions"
+on public.quiz_questions for all
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Students can manage course progress" on public.course_progress;
+create policy "Students can manage course progress"
+on public.course_progress for all
+using (exists (
+  select 1 from public.enrollments e
+  where e.id = enrollment_id and e.student_id = public.current_profile_id()
+))
+with check (exists (
+  select 1 from public.enrollments e
+  where e.id = enrollment_id and e.student_id = public.current_profile_id()
+));
+
+drop policy if exists "Users can view their own orders" on public.orders;
+create policy "Users can view their own orders"
+on public.orders for select
+using (student_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Users can view their own payments" on public.payments;
+create policy "Users can view their own payments"
+on public.payments for select
+using (exists (
+  select 1 from public.orders o
+  where o.id = order_id and (o.student_id = public.current_profile_id() or public.is_admin())
+));
+
+drop policy if exists "Users can view their own subscriptions" on public.subscriptions;
+create policy "Users can view their own subscriptions"
+on public.subscriptions for select
+using (student_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Tutors can view their earnings" on public.tutor_earnings;
+create policy "Tutors can view their earnings"
+on public.tutor_earnings for select
+using (tutor_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Tutors can view their withdrawals" on public.withdrawals;
+create policy "Tutors can view their withdrawals"
+on public.withdrawals for select
+using (tutor_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Public can read reviews" on public.reviews;
+create policy "Public can read reviews"
+on public.reviews for select using (true);
+
+drop policy if exists "Students can create reviews" on public.reviews;
+create policy "Students can create reviews"
+on public.reviews for insert
+with check (student_id = public.current_profile_id());
+
+drop policy if exists "Students can view their certificates" on public.certificates;
+create policy "Students can view their certificates"
+on public.certificates for select
+using (student_id = public.current_profile_id() or public.is_admin());
+
+drop policy if exists "Admins can manage platform settings" on public.platform_settings;
+create policy "Admins can manage platform settings"
+on public.platform_settings for all
+using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "Admins can manage audit logs" on public.audit_logs;
+create policy "Admins can manage audit logs"
+on public.audit_logs for all
+using (public.is_admin()) with check (public.is_admin());
