@@ -48,7 +48,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const getDashboardUrlForRole = (role) => {
     const target = getDashboardPathForRole(role);
-    return window.location.pathname.toLowerCase().includes('/admin/') ? `../${target}` : target;
+    const currentPath = window.location.pathname.toLowerCase();
+    const isProtectedFolder = ['/admin/', '/tutor/', '/student/'].some((folder) => currentPath.includes(folder));
+    return isProtectedFolder ? `../${target}` : target;
   };
 
   const setAuthMessage = (messageEl, text, isError = false) => {
