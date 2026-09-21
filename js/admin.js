@@ -102,8 +102,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }));
   };
 
-  const loadRows = async (table, columns, target, formatter, emptyLabel) => {
-    const { data, error } = await query(table, columns, { order: 'created_at' });
+  const loadRows = async (table, columns, target, formatter, emptyLabel, orderColumn = 'created_at') => {
+    const { data, error } = await query(table, columns, { order: orderColumn });
     if (error) { setMessage(error.message, true); return; }
     document.querySelector(target).innerHTML = (data || []).map(formatter).join('') || `<tr><td colspan="6" class="empty-state">${emptyLabel}</td></tr>`;
   };
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (page === 'students') await loadRows('profiles', 'full_name, email, role, is_verified, created_at', '#adminTableBody', (row) => row.role === 'student' ? `<tr><td>${escapeHtml(row.full_name)}</td><td>${escapeHtml(row.email)}</td><td>Student</td><td>${row.is_verified ? 'Verified' : 'Unverified'}</td><td>${formatDate(row.created_at)}</td></tr>` : '', 'No students found.');
   if (page === 'tutors') await loadRows('profiles', 'full_name, email, role, is_verified, created_at', '#adminTableBody', (row) => row.role === 'tutor' ? `<tr><td>${escapeHtml(row.full_name)}</td><td>${escapeHtml(row.email)}</td><td>Tutor</td><td>${row.is_verified ? 'Verified' : 'Unverified'}</td><td>${formatDate(row.created_at)}</td></tr>` : '', 'No tutors found.');
   if (page === 'payments') await loadRows('payments', 'gateway, gateway_reference, amount, status, created_at', '#adminTableBody', (row) => `<tr><td>${escapeHtml(row.gateway)}</td><td>${escapeHtml(row.gateway_reference || 'Not provided')}</td><td>${formatMoney(row.amount)}</td><td>${escapeHtml(row.status)}</td><td>${formatDate(row.created_at)}</td></tr>`, 'No payments found.');
-  if (page === 'subscriptions') await loadRows('subscriptions', 'plan_name, price, status, started_at, ends_at', '#adminTableBody', (row) => `<tr><td>${escapeHtml(row.plan_name)}</td><td>${formatMoney(row.price)}</td><td>${escapeHtml(row.status)}</td><td>${formatDate(row.started_at)}</td><td>${formatDate(row.ends_at)}</td></tr>`, 'No subscriptions found.');
+  if (page === 'subscriptions') await loadRows('subscriptions', 'plan_name, price, status, started_at, ends_at', '#adminTableBody', (row) => `<tr><td>${escapeHtml(row.plan_name)}</td><td>${formatMoney(row.price)}</td><td>${escapeHtml(row.status)}</td><td>${formatDate(row.started_at)}</td><td>${formatDate(row.ends_at)}</td></tr>`, 'No subscriptions found.', 'started_at');
   if (page === 'withdrawals') await loadRows('withdrawals', 'id, amount, status, payout_method, created_at', '#adminTableBody', (row) => `<tr><td>${escapeHtml(row.id).slice(0, 8)}...</td><td>${formatMoney(row.amount)}</td><td>${escapeHtml(row.status)}</td><td>${escapeHtml(row.payout_method || 'Not provided')}</td><td>${formatDate(row.created_at)}</td></tr>`, 'No withdrawals found.');
   if (page === 'reports') await loadRows('audit_logs', 'action, entity_type, created_at', '#adminTableBody', (row) => `<tr><td>${escapeHtml(row.action)}</td><td>${escapeHtml(row.entity_type || 'System')}</td><td>${formatDate(row.created_at)}</td></tr>`, 'No audit reports found.');
   if (page === 'settings') await loadRows('platform_settings', 'key, value, updated_at', '#adminTableBody', (row) => `<tr><td>${escapeHtml(row.key)}</td><td>${escapeHtml(JSON.stringify(row.value))}</td><td>${formatDate(row.updated_at)}</td></tr>`, 'No platform settings found.');
