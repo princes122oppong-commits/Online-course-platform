@@ -14,6 +14,9 @@
 .admin-body .sidebar nav a:hover, .admin-body .sidebar nav a.active { color: #fff; background: #2a3850; }
 .admin-body .sidebar nav a.active { box-shadow: inset 3px 0 #f2b84b; }
 .admin-body .content-box { background: transparent; border: 0; padding: 0; box-shadow: none; }
+.admin-body .main-layout { display: block; }
+.admin-body .sidebar { display: none; }
+.admin-body .admin-top-links { display: flex; }
 .admin-user-label { color: #aab5c7; font-size: 0.84rem; margin-right: 6px; }
 .admin-message { margin: 0 0 16px; padding: 12px 14px; color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; }
 .admin-message.error { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
@@ -29,13 +32,8 @@
 .activity-list li span { color: #748096; font-size: 0.8rem; }
 @media (max-width: 900px) {
   .admin-body .main-layout { grid-template-columns: 1fr; width: min(100% - 28px, 720px); padding-top: 18px; }
-  .admin-body .sidebar { position: static; padding: 12px; }
-  .admin-body .sidebar h3 { padding: 4px 10px 12px; }
-  .admin-body .sidebar nav { display: flex; overflow-x: auto; padding-bottom: 2px; }
-  .admin-body .sidebar nav a { flex: 0 0 auto; white-space: nowrap; }
-  .admin-body .sidebar nav a.active { box-shadow: inset 0 -3px #f2b84b; }
   .admin-body .navbar { width: min(100% - 28px, 720px); flex-wrap: wrap; }
-  .admin-body .nav-links { display: none; order: 3; width: 100%; overflow-x: auto; }
+  .admin-body .nav-links { display: none; order: 3; width: 100%; overflow-x: visible; }
   .admin-body .nav-links.nav-open { display: grid; overflow-x: visible; }
   .admin-user-label { display: none; }
 }
@@ -59,11 +57,11 @@ body:has(.sidebar a[href="settings.html"]) .sidebar nav { display: grid; gap: 3p
 body:has(.sidebar a[href="settings.html"]) .sidebar nav a { color: #9daabd; padding: 10px 12px; border-radius: 9px; font-size: .9rem; }
 body:has(.sidebar a[href="settings.html"]) .sidebar nav a.active { color: #fff; background: #2a3850; box-shadow: inset 3px 0 #f2b84b; }
 body:has(.sidebar a[href="settings.html"]) .content-box { background: transparent; border: 0; padding: 0; box-shadow: none; }
+body:has(.sidebar a[href="settings.html"]) .main-layout { display: block; }
+body:has(.sidebar a[href="settings.html"]) .sidebar { display: none; }
 
 @media (max-width: 900px) {
   body:has(.sidebar a[href="settings.html"]) .main-layout { grid-template-columns: 1fr; width: min(100% - 28px, 720px); padding-top: 18px; }
-  body:has(.sidebar a[href="settings.html"]) .sidebar { position: static; padding: 12px; }
-  body:has(.sidebar a[href="settings.html"]) .sidebar nav { display: flex; overflow-x: auto; }
-  body:has(.sidebar a[href="settings.html"]) .sidebar nav a { flex: 0 0 auto; white-space: nowrap; }
-  body:has(.sidebar a[href="settings.html"]) .sidebar nav a.active { box-shadow: inset 0 -3px #f2b84b; }
+  body:has(.sidebar a[href="settings.html"]) .nav-links { display: none; }
+  body:has(.sidebar a[href="settings.html"]) .nav-links.nav-open { display: grid; }
 }

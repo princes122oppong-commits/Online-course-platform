@@ -1,5 +1,13 @@
 document.body?.classList.add('admin-body');
 
+const adminSidebar = document.querySelector('.sidebar nav');
+const adminNavbar = document.querySelector('.navbar');
+if (adminSidebar && adminNavbar) {
+  const adminTopLinks = adminSidebar.cloneNode(true);
+  adminTopLinks.className = 'nav-links admin-top-links';
+  adminNavbar.querySelector('.nav-links')?.replaceWith(adminTopLinks);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.navbar').forEach((navbar, index) => {
     const links = navbar.querySelector('.nav-links');
