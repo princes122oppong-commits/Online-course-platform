@@ -61,13 +61,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     messageEl.style.fontWeight = '600';
   };
 
+  const getRestoredSession = async (client) => {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const { data: { session } } = await client.auth.getSession();
+      if (session) return session;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    return null;
+  };
+
   const redirectAuthenticatedUser = async () => {
     const client = getSupabaseClient();
     if (!client || !isSupabaseReady()) return;
 
     try {
-      const { data: { user }, error } = await client.auth.getUser();
-      if (error || !user) return;
+      const session = await getRestoredSession(client);
+      const user = session?.user;
+      if (!user) return;
 
       const { data: profile, error: profileError } = await client
         .from('profiles')
@@ -98,8 +108,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      const { data: { user }, error: userError } = await client.auth.getUser();
-      if (userError || !user) {
+      const session = await getRestoredSession(client);
+      const user = session?.user;
+      if (!user) {
         window.location.replace('../login.html');
         return;
       }
