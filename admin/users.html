@@ -6,6 +6,7 @@
     <title>Users | Admin Dashboard</title>
     <link rel="stylesheet" href="../css/base.css?v=2" />
     <link rel="stylesheet" href="../css/dashboard.css" />
+    <link rel="stylesheet" href="../css/admin.css" />
   </head>
   <body>
     <header class="site-header">
@@ -16,7 +17,7 @@
           <a href="users.html">Users</a>
           <a href="courses.html">Courses</a>
         </nav>
-        <div class="nav-actions"><a class="btn btn-primary" href="../index.html">Logout</a></div>
+        <div class="nav-actions"><a class="btn btn-primary" href="../index.html" data-logout>Logout</a></div>
       </div>
     </header>
     <main class="container main-layout">
@@ -30,13 +31,18 @@
           <a href="courses.html">Courses</a>
           <a href="payments.html">Payments</a>
           <a href="subscriptions.html">Subscriptions</a>
+          <a href="withdrawals.html">Withdrawals</a>
+          <a href="reports.html">Reports</a>
+          <a href="settings.html">Settings</a>
         </nav>
       </aside>
-      <section class="content-box">
+      <section class="content-box" data-admin-page="users">
+        <div id="adminMessage" aria-live="polite"></div>
         <h1>Users</h1>
-        <div class="panel-body panel"><p>Students, tutors, and admins are managed from this section.</p></div>
+        <p class="muted">Manage roles using the live profiles table.</p>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Verification</th><th>Created</th></tr></thead><tbody id="usersTable"></tbody></table></div>
       </section>
     </main>
-    <script src="../js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../config.js"></script><script src="../js/supabase.js"></script><script src="../js/admin.js"></script>
   </body>
 </html>

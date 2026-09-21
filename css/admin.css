@@ -8,8 +8,22 @@
   gap: 20px;
 }
 
+.admin-message { margin: 0 0 16px; padding: 12px 14px; color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; }
+.admin-message.error { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; min-width: 620px; }
+.admin-table th, .admin-table td { text-align: left; padding: 13px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.admin-table th { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+.admin-table select { min-width: 120px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: white; }
+.empty-state { color: var(--muted); padding: 22px 0; }
+.text-button { color: var(--primary); font-weight: 700; }
+.activity-list li { display: flex; justify-content: space-between; gap: 16px; }
+.activity-list li span { color: var(--muted); font-size: .8rem; }
+
 @media (max-width: 900px) {
   .admin-grid {
     grid-template-columns: 1fr;
   }
+
+  .activity-list li { display: block; }
 }

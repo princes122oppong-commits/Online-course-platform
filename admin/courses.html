@@ -16,7 +16,7 @@
           <a href="users.html">Users</a>
           <a href="courses.html">Courses</a>
         </nav>
-        <div class="nav-actions"><a class="btn btn-primary" href="../index.html">Logout</a></div>
+        <div class="nav-actions"><a class="btn btn-primary" href="../index.html" data-logout>Logout</a></div>
       </div>
     </header>
     <main class="container main-layout">
@@ -30,17 +30,18 @@
           <a href="courses.html" class="active">Courses</a>
           <a href="payments.html">Payments</a>
           <a href="subscriptions.html">Subscriptions</a>
+          <a href="withdrawals.html">Withdrawals</a>
+          <a href="reports.html">Reports</a>
+          <a href="settings.html">Settings</a>
         </nav>
       </aside>
-      <section class="content-box">
+      <section class="content-box" data-admin-page="courses">
+        <div id="adminMessage" aria-live="polite"></div>
         <h1>Course management</h1>
-        <div class="card-grid">
-          <div class="panel-body panel"><h3>Complete Web Development</h3><p>Approval: Approved</p></div>
-          <div class="panel-body panel"><h3>UI Design Crash Course</h3><p>Approval: Pending</p></div>
-          <div class="panel-body panel"><h3>Startup Strategy Accelerator</h3><p>Approval: Rejected</p></div>
-        </div>
+        <p class="muted">Review and publish courses from the live courses table.</p>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Category</th><th>Level</th><th>Price</th><th>Approval</th><th>Visibility</th></tr></thead><tbody id="coursesTable"></tbody></table></div>
       </section>
     </main>
-    <script src="../js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../config.js"></script><script src="../js/supabase.js"></script><script src="../js/admin.js"></script>
   </body>
 </html>
