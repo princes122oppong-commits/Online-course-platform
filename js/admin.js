@@ -1,3 +1,5 @@
+document.body?.classList.add('admin-body');
+
 document.addEventListener('DOMContentLoaded', async () => {
   const client = window.coursehubSupabase;
   const root = document.querySelector('[data-admin-page]');

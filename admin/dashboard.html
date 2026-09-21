@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../css/dashboard.css" />
     <link rel="stylesheet" href="../css/admin.css" />
   </head>
-  <body>
+  <body class="admin-body">
     <header class="site-header">
       <div class="container navbar">
         <a class="brand" href="../index.html">CourseHub</a>
@@ -18,7 +18,8 @@
           <a href="courses.html">Courses</a>
         </nav>
         <div class="nav-actions">
-          <a class="btn btn-primary" href="../index.html" data-logout>Logout</a>
+          <span class="admin-user-label">Administrator</span>
+          <a class="btn btn-primary" href="../index.html" data-logout>Log out</a>
         </div>
       </div>
     </header>
@@ -44,10 +45,11 @@
         <div id="adminMessage" aria-live="polite"></div>
         <div class="dashboard-header">
           <div>
-            <p class="eyebrow">Admin dashboard</p>
-            <h1>Operations overview</h1>
+            <p class="eyebrow">Monday, September 21, 2026</p>
+            <h1>Good morning, Administrator</h1>
+            <p class="dashboard-subtitle">Here is what is happening across your learning platform.</p>
           </div>
-          <span class="status-chip">Platform</span>
+          <span class="status-chip success"><span class="status-dot"></span>Live platform</span>
         </div>
 
         <div id="dashboardMetrics" class="metric-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 20px;"></div>

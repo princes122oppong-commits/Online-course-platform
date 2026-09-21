@@ -1,29 +1,46 @@
-.admin-shell {
-  display: grid;
-  gap: 20px;
-}
-
-.admin-grid {
-  display: grid;
-  gap: 20px;
-}
-
+.admin-body { background: #eef2f6; color: #172033; }
+.admin-body .site-header { background: #111827; border-bottom: 0; position: sticky; }
+.admin-body .navbar { width: min(1400px, calc(100% - 48px)); padding: 15px 0; }
+.admin-body .brand { color: #fff; letter-spacing: -0.03em; }
+.admin-body .nav-links { color: #aab5c7; gap: 8px; }
+.admin-body .nav-links a { padding: 8px 12px; border-radius: 8px; }
+.admin-body .nav-links a:hover, .admin-body .nav-links a:focus { background: #1f2937; color: #fff; }
+.admin-body .btn-primary { background: #e7edf5; color: #172033; border-radius: 8px; padding: 0.62rem 0.9rem; }
+.admin-body .main-layout { width: min(1400px, calc(100% - 48px)); grid-template-columns: 228px minmax(0, 1fr); align-items: start; gap: 28px; padding: 28px 0 56px; }
+.admin-body .sidebar { position: sticky; top: 82px; background: #172033; border: 0; border-radius: 16px; padding: 18px 12px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12); }
+.admin-body .sidebar h3 { color: #fff; padding: 0 12px 16px; margin: 0 0 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.88rem; text-transform: uppercase; letter-spacing: 0.12em; }
+.admin-body .sidebar nav { display: grid; gap: 3px; }
+.admin-body .sidebar nav a { color: #9daabd; padding: 10px 12px; border-radius: 9px; font-size: 0.9rem; }
+.admin-body .sidebar nav a:hover, .admin-body .sidebar nav a.active { color: #fff; background: #2a3850; }
+.admin-body .sidebar nav a.active { box-shadow: inset 3px 0 #f2b84b; }
+.admin-body .content-box { background: transparent; border: 0; padding: 0; box-shadow: none; }
+.admin-user-label { color: #aab5c7; font-size: 0.84rem; margin-right: 6px; }
 .admin-message { margin: 0 0 16px; padding: 12px 14px; color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; }
 .admin-message.error { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
-.admin-table-wrap { overflow-x: auto; }
+.admin-table-wrap { overflow-x: auto; background: #fff; border: 1px solid #dce3ec; border-radius: 14px; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04); }
 .admin-table { width: 100%; border-collapse: collapse; min-width: 620px; }
-.admin-table th, .admin-table td { text-align: left; padding: 13px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.admin-table th { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
-.admin-table select { min-width: 120px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: white; }
-.empty-state { color: var(--muted); padding: 22px 0; }
-.text-button { color: var(--primary); font-weight: 700; }
+.admin-table th, .admin-table td { text-align: left; padding: 15px 16px; border-bottom: 1px solid #edf0f4; vertical-align: middle; }
+.admin-table th { color: #748096; background: #f8fafc; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.admin-table tr:last-child td { border-bottom: 0; }
+.admin-table select { min-width: 120px; padding: 8px; border: 1px solid #d5dce6; border-radius: 8px; background: white; }
+.empty-state { color: #748096; padding: 22px 0; }
+.text-button { color: #3267d6; font-weight: 700; }
 .activity-list li { display: flex; justify-content: space-between; gap: 16px; }
-.activity-list li span { color: var(--muted); font-size: .8rem; }
-
+.activity-list li span { color: #748096; font-size: 0.8rem; }
 @media (max-width: 900px) {
-  .admin-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .activity-list li { display: block; }
+  .admin-body .main-layout { grid-template-columns: 1fr; width: min(100% - 28px, 720px); padding-top: 18px; }
+  .admin-body .sidebar { position: static; padding: 12px; }
+  .admin-body .sidebar h3 { padding: 4px 10px 12px; }
+  .admin-body .sidebar nav { display: flex; overflow-x: auto; padding-bottom: 2px; }
+  .admin-body .sidebar nav a { flex: 0 0 auto; white-space: nowrap; }
+  .admin-body .sidebar nav a.active { box-shadow: inset 0 -3px #f2b84b; }
+  .admin-body .navbar { width: min(100% - 28px, 720px); flex-wrap: wrap; }
+  .admin-body .nav-links { order: 3; width: 100%; overflow-x: auto; }
+  .admin-user-label { display: none; }
+}
+@media (max-width: 560px) {
+  .admin-body .navbar { gap: 10px; }
+  .admin-body .brand { font-size: 1.25rem; }
+  .admin-body .nav-links { gap: 0; }
+  .admin-body .dashboard-header { align-items: flex-start; flex-direction: column; }
 }
