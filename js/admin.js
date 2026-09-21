@@ -1,6 +1,24 @@
 document.body?.classList.add('admin-body');
 
 document.addEventListener('DOMContentLoaded', async () => {
+  document.querySelectorAll('.navbar').forEach((navbar, index) => {
+    const links = navbar.querySelector('.nav-links');
+    if (!links || navbar.querySelector('.menu-toggle')) return;
+    const toggle = document.createElement('button');
+    toggle.className = 'menu-toggle';
+    toggle.type = 'button';
+    toggle.textContent = 'Menu';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', `admin-nav-${index}`);
+    links.id = `admin-nav-${index}`;
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('nav-open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.textContent = isOpen ? 'Close' : 'Menu';
+    });
+    navbar.querySelector('.nav-actions')?.prepend(toggle);
+  });
+
   const client = window.coursehubSupabase;
   const root = document.querySelector('[data-admin-page]');
   const page = root?.dataset.adminPage || 'dashboard';

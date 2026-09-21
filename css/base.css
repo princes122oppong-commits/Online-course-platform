@@ -67,6 +67,18 @@ img {
   color: var(--muted);
 }
 
+.menu-toggle {
+  display: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  padding: 0.55rem 0.72rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .nav-actions {
   display: flex;
   align-items: center;
@@ -381,35 +393,38 @@ textarea {
     white-space: nowrap;
   }
 
-  .nav-links {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    min-width: 0;
-    width: 100%;
-    gap: 6px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding: 2px 0 4px;
-    scrollbar-width: none;
-    white-space: nowrap;
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .nav-links::-webkit-scrollbar {
+  .nav-links {
     display: none;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  }
+
+  .nav-links.nav-open {
+    display: grid;
   }
 
   .nav-links a {
-    flex: 0 0 auto;
-    padding: 0.42rem 0.68rem;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    font-size: 0.8rem;
+    padding: 0.62rem 0.72rem;
+    border-radius: 7px;
+    font-size: 0.86rem;
   }
 
   .nav-links a.active,
   .nav-links a:hover {
     background: #eff6ff;
-    border-color: #dbeafe;
     color: var(--primary-dark);
   }
 }

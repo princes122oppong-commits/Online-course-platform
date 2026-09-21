@@ -1,4 +1,22 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  document.querySelectorAll('.navbar').forEach((navbar, index) => {
+    const links = navbar.querySelector('.nav-links');
+    if (!links || navbar.querySelector('.menu-toggle')) return;
+    const toggle = document.createElement('button');
+    toggle.className = 'menu-toggle';
+    toggle.type = 'button';
+    toggle.textContent = 'Menu';
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', `site-nav-${index}`);
+    links.id = `site-nav-${index}`;
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('nav-open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.textContent = isOpen ? 'Close' : 'Menu';
+    });
+    navbar.querySelector('.nav-actions')?.prepend(toggle);
+  });
+
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const navLinks = document.querySelectorAll('[data-nav]');
 

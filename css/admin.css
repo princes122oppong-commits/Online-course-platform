@@ -35,7 +35,8 @@
   .admin-body .sidebar nav a { flex: 0 0 auto; white-space: nowrap; }
   .admin-body .sidebar nav a.active { box-shadow: inset 0 -3px #f2b84b; }
   .admin-body .navbar { width: min(100% - 28px, 720px); flex-wrap: wrap; }
-  .admin-body .nav-links { order: 3; width: 100%; overflow-x: auto; }
+  .admin-body .nav-links { display: none; order: 3; width: 100%; overflow-x: auto; }
+  .admin-body .nav-links.nav-open { display: grid; overflow-x: visible; }
   .admin-user-label { display: none; }
 }
 @media (max-width: 560px) {
