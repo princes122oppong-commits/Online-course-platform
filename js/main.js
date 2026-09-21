@@ -108,7 +108,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (profileError || !profile || profile.role !== routeRole) {
+      if (profileError) {
+        window.location.replace('../login.html');
+        return;
+      }
+
+      if (!profile || profile.role !== routeRole) {
+        if (profile?.role && ['student', 'tutor', 'admin'].includes(profile.role)) {
+          window.location.replace(getDashboardUrlForRole(profile.role));
+          return;
+        }
         window.location.replace('../index.html');
         return;
       }
