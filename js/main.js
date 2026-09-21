@@ -585,20 +585,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      if (data.user) {
-        const { error: profileError } = await client.from('profiles').upsert({
-          user_id: data.user.id,
-          full_name: fullName,
-          email,
-          is_verified: Boolean(data.session)
-        }, { onConflict: 'user_id' });
-
-        if (profileError) {
-          setAuthMessage(messageEl, 'Account created, but profile setup needs attention.', true);
-          return;
-        }
-      }
-
       if (data.session) {
         const { data: savedProfile } = await client
           .from('profiles')
