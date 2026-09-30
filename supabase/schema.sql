@@ -557,3 +557,162 @@ drop policy if exists "Admins can manage audit logs" on public.audit_logs;
 create policy "Admins can manage audit logs"
 on public.audit_logs for all
 using (public.is_admin()) with check (public.is_admin());
+
+-- Production authorization hardening.
+create or replace function public.is_tutor()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where user_id = auth.uid() and role = 'tutor'
+  )
+$$;
+
+drop policy if exists "Course owners can manage their courses" on public.courses;
+create policy "Tutors can create their own courses"
+on public.courses for insert
+with check (
+  tutor_id = public.current_profile_id()
+  and public.is_tutor()
+);
+
+drop policy if exists "Course owners can update their courses" on public.courses;
+create policy "Tutors can update their own courses"
+on public.courses for update
+using (tutor_id = public.current_profile_id() or public.is_admin())
+with check (tutor_id = public.current_profile_id() or public.is_admin());
+
+create or replace function public.protect_course_moderation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- SQL migrations/seeds run without auth.uid(); authenticated tutors do not
+  -- get to choose moderation fields, while deployment seeds retain their
+  -- declared status.
+  if auth.uid() is not null and not public.is_admin() then
+    new.approval_status := 'pending';
+    new.is_published := false;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_course_moderation on public.courses;
+create trigger protect_course_moderation
+before insert or update on public.courses
+for each row execute function public.protect_course_moderation();
+
+-- Enrolment is created only through this function. Paid courses require a
+-- completed order; the browser cannot bypass that rule with a direct insert.
+create or replace function public.enroll_in_course(p_course_id uuid)
+returns public.enrollments
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  student_profile_id uuid;
+  selected_course public.courses;
+  created_enrollment public.enrollments;
+begin
+  student_profile_id := public.current_profile_id();
+  if student_profile_id is null then
+    raise exception 'Authentication required';
+  end if;
+
+  if not exists (
+    select 1 from public.profiles
+    where id = student_profile_id and role = 'student'
+  ) then
+    raise exception 'Only students can enrol in courses';
+  end if;
+
+  select * into selected_course
+  from public.courses
+  where id = p_course_id
+    and is_published = true
+    and approval_status = 'approved';
+
+  if selected_course.id is null then
+    raise exception 'Course is not available';
+  end if;
+
+  if selected_course.price > 0 and not exists (
+    select 1 from public.orders
+    where student_id = student_profile_id
+      and course_id = p_course_id
+      and status = 'paid'
+  ) then
+    raise exception 'A paid order is required before enrolment';
+  end if;
+
+  insert into public.enrollments (student_id, course_id, status)
+  values (student_profile_id, p_course_id, 'active')
+  on conflict (student_id, course_id) do update
+    set status = 'active'
+  returning * into created_enrollment;
+
+  return created_enrollment;
+end;
+$$;
+
+revoke all on function public.enroll_in_course(uuid) from public;
+grant execute on function public.enroll_in_course(uuid) to authenticated;
+
+-- Payout requests are also server-controlled. Tutors can inspect their own
+-- earnings/withdrawals, but only this function can create a withdrawal.
+create or replace function public.request_withdrawal(
+  p_amount numeric,
+  p_payout_method text
+)
+returns public.withdrawals
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  tutor_profile_id uuid;
+  available_amount numeric;
+  created_withdrawal public.withdrawals;
+begin
+  tutor_profile_id := public.current_profile_id();
+  if tutor_profile_id is null or not public.is_tutor() then
+    raise exception 'Only tutors can request withdrawals';
+  end if;
+
+  if p_amount is null or p_amount <= 0 then
+    raise exception 'Withdrawal amount must be greater than zero';
+  end if;
+
+  select greatest(
+    coalesce((select sum(amount) from public.tutor_earnings
+      where tutor_id = tutor_profile_id and status = 'released'), 0)
+    - coalesce((select sum(amount) from public.withdrawals
+      where tutor_id = tutor_profile_id and status in ('pending', 'approved', 'paid')), 0),
+    0
+  ) into available_amount
+  from public.tutor_earnings
+  where tutor_id = tutor_profile_id
+  limit 1;
+
+  if p_amount > available_amount then
+    raise exception 'Withdrawal exceeds released earnings';
+  end if;
+
+  insert into public.withdrawals (tutor_id, amount, status, payout_method)
+  values (tutor_profile_id, p_amount, 'pending', p_payout_method)
+  returning * into created_withdrawal;
+
+  return created_withdrawal;
+end;
+$$;
+
+revoke all on function public.request_withdrawal(numeric, text) from public;
+grant execute on function public.request_withdrawal(numeric, text) to authenticated;

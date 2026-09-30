@@ -37,16 +37,30 @@ A professional multi-role online learning platform foundation built with HTML, C
 
 ## Quick start
 
-1. Open the project in a browser or serve it locally using a static server.
-2. If you want real Supabase auth and database data, configure the frontend with your own project URL and anon key before loading the page.
-3. You can do this by setting `window.SUPABASE_URL` and `window.SUPABASE_ANON_KEY` before the app scripts run, or by assigning `window.__COURSEHUB_SUPABASE__ = { url: '...', anonKey: '...' }` before `js/supabase.js` is loaded.
-4. Apply the SQL from `supabase/schema.sql` in your Supabase project and then seed the starter data from `supabase/seed.sql`.
+1. Install dependencies with `npm install`.
+2. Start the site with `npm start`.
+3. Copy your Supabase project URL and publishable anon key into `config.js`.
+4. Run the complete SQL from `supabase/schema.sql` in the Supabase SQL editor.
+5. Run `supabase/seed.sql` to create the initial categories and platform settings.
+6. Open the URL printed by the server, normally `http://localhost:8000`.
 
-## Supabase readiness
+## Production safety
 
-The app is built to work in two modes:
+- The frontend uses only the Supabase publishable anon key. Never put a service-role key in `config.js` or any browser-delivered file.
+- Keep service-role keys, database passwords, payment credentials, and webhook secrets in Supabase Edge Functions or deployment secrets.
+- The application refuses authentication and protected routes until Supabase is configured.
+- Use `npm start` or `npm run dev` for local development. The default port is `8000` and the server will automatically try the next available port if needed.
 
-- Demo mode: static mock data is used when Supabase is not configured.
-- Live mode: real auth, profile creation, and course data are used when the project URL and anon key are supplied.
+## Live Supabase behavior
 
-This makes the project usable for local UI work while still having a real backend integration path.
+The application is configured for a real backend-first flow:
+
+- Supabase Auth handles registration, login, sessions, refresh, and logout.
+- Profiles are created by the `on_auth_user_created` database trigger.
+- Published courses are read from `public.courses`.
+- Tutor course submissions are inserted into `public.courses` as pending review.
+- Enrollment is created through the protected `enroll_in_course` database function.
+- Withdrawal requests are created through the protected `request_withdrawal` database function.
+- Row-level security prevents users from changing roles, publishing courses, or writing financial records directly.
+
+Paid checkout still requires a payment provider and a Supabase Edge Function to create and verify paid orders. The database function deliberately refuses paid-course enrollment until an order has status `paid`.

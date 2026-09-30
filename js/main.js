@@ -1,4 +1,25 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  if (window.coursehubSession) {
+    const currentPath = window.location.pathname.toLowerCase();
+    const routeRole = currentPath.includes('/admin/') && !currentPath.endsWith('/admin/login.html')
+      ? 'admin'
+      : currentPath.includes('/tutor/')
+        ? 'tutor'
+        : currentPath.includes('/student/')
+          ? 'student'
+          : null;
+
+    if (window.coursehubSession.isAuthPath()) {
+      const redirected = await window.coursehubSession.redirectSignedInUsers();
+      if (redirected) return;
+    } else if (routeRole) {
+      const result = await window.coursehubSession.guard(routeRole);
+      if (!result.allowed) return;
+    }
+
+    window.coursehubSession.wireLogoutLinks();
+  }
+
   document.querySelectorAll('.navbar').forEach((navbar, index) => {
     const links = navbar.querySelector('.nav-links');
     if (!links || navbar.querySelector('.menu-toggle')) return;
@@ -61,21 +82,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     messageEl.style.fontWeight = '600';
   };
 
-  const getRestoredSession = async (client) => {
-    for (let attempt = 0; attempt < 5; attempt += 1) {
+  const getRestoredSession = async (client, maxAttempts = 5, delayMs = 500) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const { data: { session } } = await client.auth.getSession();
       if (session) return session;
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
-    return null;
+
+    const { data: { session } } = await client.auth.getSession();
+    return session || null;
   };
 
   const redirectAuthenticatedUser = async () => {
     const client = getSupabaseClient();
+    if (client && isSupabaseReady()) {
+      try {
+        const { data: { session } } = await client.auth.getSession();
+        if (session?.user) {
+          const { data: profile, error: profileError } = await client
+            .from('profiles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+
+          if (!profileError && profile?.role) {
+            const target = getDashboardUrlForRole(profile.role);
+            if (window.location.pathname.split('/').pop() !== target.split('/').pop()) {
+              window.location.href = target;
+            }
+            return;
+          }
+        }
+      } catch (error) {
+        // Fall through to local fallback only when no live session is available.
+      }
+    }
+
+    const localSession = window.coursehubSession?.getSession?.();
+    if (localSession?.role) {
+      const target = getDashboardUrlForRole(localSession.role);
+      if (window.location.pathname.split('/').pop() !== target.split('/').pop()) {
+        window.location.href = target;
+      }
+      return;
+    }
+
     if (!client || !isSupabaseReady()) return;
 
     try {
-      const session = await getRestoredSession(client);
+      const session = await getRestoredSession(client, 8, 400);
       const user = session?.user;
       if (!user) return;
 
@@ -102,6 +157,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!routeRole) return;
 
     const client = getSupabaseClient();
+    if (client && isSupabaseReady()) {
+      try {
+        const { data: { session } } = await client.auth.getSession();
+        const user = session?.user;
+        if (!user) {
+          window.location.replace('../login.html');
+          return;
+        }
+
+        const { data: profile, error: profileError } = await client
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          window.location.replace('../login.html');
+          return;
+        }
+
+        if (!profile || profile.role !== routeRole) {
+          if (profile?.role && ['student', 'tutor', 'admin'].includes(profile.role)) {
+            window.location.replace(getDashboardUrlForRole(profile.role));
+            return;
+          }
+          window.location.replace('../index.html');
+          return;
+        }
+
+        document.documentElement.classList.add('auth-ready');
+        return;
+      } catch (error) {
+        // Continue to local fallback only if the live auth layer is not available.
+      }
+    }
+
+    const localSession = window.coursehubSession?.getSession?.();
+    if (localSession) {
+      if (localSession.role !== routeRole) {
+        window.location.replace(getDashboardUrlForRole(localSession.role));
+        return;
+      }
+
+      document.documentElement.classList.add('auth-ready');
+      return;
+    }
+
     if (!client || !isSupabaseReady()) {
       window.location.replace('../login.html');
       return;
@@ -293,7 +395,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <p>${course.description}</p>
         <div class="meta"><span>${course.category}</span><span>${course.level}</span><span>${course.lessons} lessons</span></div>
         <div class="hero-actions" style="margin-top: 18px;">
-          <a class="btn btn-primary" href="register.html">Enroll Now</a>
+          <button class="btn btn-primary" id="enrollCourse" type="button" data-course-id="${course.id}">Enroll Now</button>
           <span class="price" style="font-size: 2rem;">GH₵${course.price}</span>
         </div>
       </div>
@@ -305,9 +407,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         <p>${course.lessons} lessons</p>
         <p>Certificate included</p>
         <p><span class="rating-pill">★ ${Number(course.rating).toFixed(1)}</span> / 5</p>
-        <a class="btn btn-primary" href="register.html">Buy This Course</a>
+        <button class="btn btn-primary" id="enrollCourseSidebar" type="button" data-course-id="${course.id}">Enroll after payment</button>
       </aside>
     `;
+  };
+
+  const wireCourseEnrollment = () => {
+    document.querySelectorAll('[data-course-id]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const session = window.coursehubSession;
+        const message = document.querySelector('#courseEnrollmentMessage');
+        if (!session?.isConfigured?.()) {
+          if (message) message.textContent = 'Connect Supabase before enrolling in a course.';
+          return;
+        }
+
+        button.disabled = true;
+        const result = await session.enrollInCourseLive(button.dataset.courseId);
+        if (message) message.textContent = result.ok
+          ? 'Enrollment completed. Open your student dashboard to begin.'
+          : result.message;
+        button.disabled = false;
+      });
+    });
   };
 
   const getRoleDashboardData = async (role) => {
@@ -501,6 +623,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderTutors(fallbackData.tutors);
   renderCoursesGrid(courses);
   renderCourseDetail(courses);
+  wireCourseEnrollment();
   await renderDashboard();
 
   if (searchInput) searchInput.addEventListener('input', applyCourseFilters);
@@ -523,39 +646,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const client = getSupabaseClient();
+
+      if (client && isSupabaseReady()) {
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (error) {
+          setAuthMessage(messageEl, error.message || 'Login failed. Please try again.', true);
+          return;
+        }
+
+        const activeUser = data?.user;
+        if (!activeUser) {
+          setAuthMessage(messageEl, 'Login succeeded, but the session is not ready yet. Please try again in a moment.', true);
+          return;
+        }
+
+        const { data: profile, error: profileError } = await client
+          .from('profiles')
+          .select('role')
+          .eq('user_id', activeUser.id)
+          .maybeSingle();
+
+        if (profileError) {
+          setAuthMessage(messageEl, 'Login succeeded, but your profile could not be loaded. Please try again or contact support.', true);
+          return;
+        }
+
+        if (!profile) {
+          setAuthMessage(messageEl, 'Your account exists in Supabase, but the profile row is missing. Create it in the database or sign up again.', true);
+          return;
+        }
+
+        const target = getDashboardUrlForRole(profile.role);
+        window.location.replace(target);
+        return;
+      }
+
       if (!client || !isSupabaseReady()) {
-        setAuthMessage(messageEl, 'The authentication service is unavailable. Please configure Supabase before signing in.', true);
+        setAuthMessage(messageEl, 'Supabase is not configured. Add the project URL and anon key in config.js before signing in.', true);
         return;
       }
-
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-      if (error) {
-        setAuthMessage(messageEl, error.message || 'Login failed. Please try again.', true);
-        return;
-      }
-
-      const { data: profile, error: profileError } = await client
-        .from('profiles')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
-
-      const pageRole = window.location.pathname.toLowerCase().includes('/admin/') ? 'admin' : 'student';
-      const target = getDashboardUrlForRole(profile?.role || 'student');
-
-      if (pageRole === 'admin' && profile?.role !== 'admin') {
-        setAuthMessage(messageEl, 'This admin portal is restricted to admin accounts only.', true);
-        await client.auth.signOut();
-        return;
-      }
-
-      if (profileError && !profile) {
-        setAuthMessage(messageEl, 'Login successful. Profile is still being set up.', false);
-        setTimeout(() => window.location.href = target, 800);
-        return;
-      }
-
-      window.location.href = target;
     });
   }
 
@@ -586,38 +715,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const client = getSupabaseClient();
-      if (!client || !isSupabaseReady()) {
-        setAuthMessage(messageEl, 'The authentication service is unavailable. Please configure Supabase before creating an account.', true);
-        return;
-      }
-
-      const { data, error } = await client.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            account_type: accountType
+      if (client && isSupabaseReady()) {
+        const { data, error } = await client.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              account_type: accountType
+            }
           }
+        });
+
+        if (error) {
+          setAuthMessage(messageEl, error.message || 'Registration failed.', true);
+          return;
         }
-      });
 
-      if (error) {
-        setAuthMessage(messageEl, error.message || 'Registration failed.', true);
+        if (data.session) {
+          const { data: savedProfile } = await client
+            .from('profiles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+          window.location.href = getDashboardUrlForRole(savedProfile?.role || accountType);
+          return;
+        }
+
+        setAuthMessage(messageEl, 'Account created. Check your email to confirm and then sign in.', false);
         return;
       }
 
-      if (data.session) {
-        const { data: savedProfile } = await client
-          .from('profiles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-        window.location.href = getDashboardUrlForRole(savedProfile?.role || accountType);
+      if (!client || !isSupabaseReady()) {
+        setAuthMessage(messageEl, 'Supabase is not configured. Add the project URL and anon key in config.js before registering.', true);
         return;
       }
-
-      setAuthMessage(messageEl, 'Account created. Check your email to confirm and then sign in.', false);
     });
   }
 });
